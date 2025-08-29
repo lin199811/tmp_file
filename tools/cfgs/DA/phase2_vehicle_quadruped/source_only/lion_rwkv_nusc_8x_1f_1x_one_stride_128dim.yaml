@@ -78,14 +78,12 @@ MODEL:
 
         NUM_HM_CONV: 2
         SEPARATE_HEAD_CFG:
-            HEAD_ORDER: [ 'center', 'height', 'dim', 'rot', 'vel' ]
+            HEAD_ORDER: [ 'center', 'height', 'dim', 'rot']
             HEAD_DICT: {
                 'center': { 'out_channels': 2, 'num_conv': 2 },
                 'height': { 'out_channels': 1, 'num_conv': 2 },
                 'dim': { 'out_channels': 3, 'num_conv': 2 },
                 'rot': { 'out_channels': 2, 'num_conv': 2 },
-                'vel': { 'out_channels': 2, 'num_conv': 2 },
-                'iou': { 'out_channels': 1, 'num_conv': 2 },
 
             }
 

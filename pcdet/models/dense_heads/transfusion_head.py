@@ -98,8 +98,8 @@ class TransFusionHead(nn.Module):
         self.loss_heatmap_weight = self.model_cfg.LOSS_CONFIG.LOSS_WEIGHTS['hm_weight']
         self.loss_iou_rescore_weight = self.model_cfg.LOSS_CONFIG.LOSS_WEIGHTS['loss_iou_rescore_weight']
 
-        self.code_size = 10
-
+        self.code_size = 8
+        self.code_size =  len(self.model_cfg.LOSS_CONFIG.LOSS_WEIGHTS['code_weights'])
         # a shared convolution
         self.shared_conv = nn.Conv2d(in_channels=input_channels,out_channels=hidden_channel,kernel_size=3,padding=1)
         layers = []
