@@ -1,7 +1,8 @@
 **__pycache__**
 **build**
 **egg-info**
-**dist**
+# **dist**
+*.egg
 *.pyc
 venv/
 *.idea/
