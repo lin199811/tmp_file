@@ -181,7 +181,7 @@ MODEL:
 
     POST_PROCESSING:
         RECALL_THRESH_LIST: [0.3, 0.5, 0.7]
-        SCORE_THRESH: 0.2 #0.3,0.01 0.05 0.08 0.2  #0.15  4->0.3     #0.01 8->0.05
+        SCORE_THRESH: 0.21 #0.3,0.01 0.05 0.08 0.2  #0.15  4->0.3     #0.01 8->0.05 #0.22 0.16 0.21 0.22
         OUTPUT_RAW_SCORE: False
 
         EVAL_METRIC: kitti
@@ -195,7 +195,7 @@ MODEL:
 
 
 OPTIMIZATION:
-    BATCH_SIZE_PER_GPU: 24
+    BATCH_SIZE_PER_GPU: 48
     NUM_EPOCHS: 16
 
     OPTIMIZER: adam_onecycle
@@ -227,10 +227,10 @@ SELF_TRAIN:
 
     # SCORE_THRESH: [0.15, 0.85] #[0.03, 0.06] 4->[0.15,0.5] 8->[0.2,0.5] 12->[0.5,0.5]   8->[0.1, 0.1]
     # NEG_THRESH: [0.05, 0.4] #[0.01, 0.02] [0.05,0.2] [0.08,0.2] [0.2,0.2]             8->[0.05, 0.05]
-    SCORE_THRESH: [0.25, 0.7] #[0.03, 0.06] 4->[0.15,0.5] 8->[0.2,0.5] 12->[0.5,0.5]   8->[0.1, 0.1]
-    NEG_THRESH: [0.2, 0.2] #[0.01, 0.02] [0.05,0.2] [0.08,0.2] [0.2,0.2]             8->[0.05, 0.05]
+    SCORE_THRESH: [0.02, 0.5] #[0.03, 0.06] 4->[0.15,0.5] 8->[0.2,0.5] 12->[0.5,0.5]   8->[0.1, 0.1]
+    NEG_THRESH: [0.01, 0.01] #[0.01, 0.02] [0.05,0.2] [0.08,0.2] [0.2,0.2]             8->[0.05, 0.05]
     UPDATE_PSEUDO_LABEL: [0]
-    UPDATE_PSEUDO_LABEL_INTERVAL: 8
+    UPDATE_PSEUDO_LABEL_INTERVAL: 16
     INIT_PS: None
 
     PROG_AUG:

@@ -16,7 +16,7 @@ CFG_FILE=./cfgs/nuscenes-kitti_models/voxel_rcnn_with_centerhead_gblobs_pi3det.y
 
 
 CFG_FILE=./cfgs/nuscenes-kitti_models/voxel_rcnn_with_centerhead_gblobs_pi3det_st3d.yaml
-CKPT=/home/uqhyan14/vlm_challenge/LION/output/cfgs/nuscenes-kitti_models/voxel_rcnn_with_centerhead_gblobs_pi3det_st3d/default/ckpt/checkpoint_epoch_16.pth
+CKPT=/home/uqhyan14/vlm_challenge/LION/output/cfgs/nuscenes-kitti_models/voxel_rcnn_with_centerhead_gblobs_pi3det_st3d/default/ckpt/checkpoint_epoch_4.pth
 # CKPT=/home/uqhyan14/vlm_challenge/LION/output/cfgs/nuscenes-kitti_models/voxel_rcnn_with_centerhead_gblobs_pi3det_l40/default/ckpt/checkpoint_epoch_30.pth
 
 # ----------------------
