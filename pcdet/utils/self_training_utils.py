@@ -12,7 +12,7 @@ import pickle as pkl
 import re
 from pcdet.models.model_utils.dsnorm import set_ds_target
 # from pcdet.utils import tracker_utils, ms3d_utils
-
+from collections import defaultdict
 #PSEUDO_LABELS = {}
 from multiprocessing import Manager
 
@@ -61,6 +61,7 @@ def check_already_exsit_pseudo_label(ps_label_dir, start_epoch):
         if int(num_epoch[0]) <= start_epoch:
             latest_ps_label = pkl.load(open(cur_pkl, 'rb'))
             PSEUDO_LABELS.update(latest_ps_label)
+            analyze_pseudo_labels(PSEUDO_LABELS)
             return cur_pkl
 
     return None
@@ -96,22 +97,25 @@ def save_pseudo_label_epoch(model, val_loader, rank, leave_pbar, ps_label_dir, c
     model.eval()
 
     for cur_it in range(total_it_each_epoch):
+
         try:
             target_batch = next(val_dataloader_iter)
         except StopIteration:
             target_dataloader_iter = iter(val_loader)
             target_batch = next(target_dataloader_iter)
-
         # generate gt_boxes for target_batch and update model weights
         with torch.no_grad():
             load_data_to_gpu(target_batch)
             pred_dicts, ret_dict = model(target_batch)
-
+        if cur_it==1:
+            for pred in pred_dicts:
+                print("pred_scores: ",pred["pred_scores"])
+                print("pred_labels: ",pred["pred_labels"])
         pos_ps_batch, ign_ps_batch = save_pseudo_label_batch(
             target_batch, pred_dicts=pred_dicts,
             need_update=(cfg.SELF_TRAIN.get('MEMORY_ENSEMBLE', None) and
-                         cfg.SELF_TRAIN.MEMORY_ENSEMBLE.ENABLED and
-                         cur_epoch > 0)
+                        cfg.SELF_TRAIN.MEMORY_ENSEMBLE.ENABLED and
+                        cur_epoch > 0)
         )
 
         # log to console and tensorboard
@@ -173,6 +177,56 @@ def optim_pseudo_label_w_traj(val_loader, rank, ps_label_dir, cur_epoch):
     gather_and_dump_pseudo_label_result_sigle_rank(rank, ps_label_dir, cur_epoch)
     print(len(PSEUDO_LABELS))
 
+def analyze_pseudo_labels(PSEUDO_LABELS):
+    label_counts = defaultdict(int)
+    label_scores = defaultdict(list)
+
+    # 遍历所有 frame
+    for frame_id, data in PSEUDO_LABELS.items():
+        gt_boxes = data['gt_boxes']  # (N, 9)
+        labels = gt_boxes[:, 7].astype(int)
+        scores = gt_boxes[:, 8].astype(float)
+
+        for l, s in zip(labels, scores):
+            label_counts[l] += 1
+            label_scores[l].append(s)
+
+    # 统计结果
+    print("\n======= PSEUDO_LABELS 统计结果 =======")
+    per_line = 8  # 每行显示几个
+    resolution =0.02
+     # 打印累计分布
+    for label, scores in label_scores.items():
+
+        scores = np.array(scores)
+        min_s, max_s = scores.min(), scores.max()
+        hist, bin_edges = np.histogram(scores, bins=np.arange(0, 1+resolution, resolution))
+
+        # 只保留落在 min/max 内的区间
+        valid = (bin_edges[:-1] >= min_s-resolution) & (bin_edges[1:] <= max_s + resolution)
+        hist = hist[valid]
+        bin_edges = bin_edges[:-1][valid]
+
+        # 计算累计分布
+        cum_counts = np.cumsum(hist[::-1])[::-1]
+        total = label_counts[label]
+
+        print(f"=== Label {label} === 数量: {total}")
+        # print(f"得分范围: [{min_s:.3f}, {max_s:.3f}]")
+        if label == -1:
+            continue
+        row = []
+        for i, (b, c) in enumerate(zip(bin_edges, cum_counts), 1):
+            pct = c / total * 100
+            row.append(f"{b:5.2f}: {c:6d} ({pct:5.1f}%)")
+            if i % per_line == 0:
+                print("  ".join(row))
+                row = []
+        if row:  # 打印最后一行不足 per_line 的
+            print("  ".join(row))
+        # for b, c in zip(bin_edges, cum_counts):
+        #     pct = c / total * 100
+        #     print(f"  {b:.2f} - 1: {c} ({pct:.1f}%)")
 
 def gather_and_dump_pseudo_label_result(rank, ps_label_dir, cur_epoch):
     commu_utils.synchronize()
@@ -195,6 +249,8 @@ def gather_and_dump_pseudo_label_result(rank, ps_label_dir, cur_epoch):
     commu_utils.synchronize()
     PSEUDO_LABELS.clear()
     PSEUDO_LABELS.update(NEW_PSEUDO_LABELS)
+    analyze_pseudo_labels(PSEUDO_LABELS)
+
     NEW_PSEUDO_LABELS.clear()
 
 def gather_and_dump_pseudo_label_result_sigle_rank(rank, ps_label_dir, cur_epoch):
@@ -207,7 +263,9 @@ def gather_and_dump_pseudo_label_result_sigle_rank(rank, ps_label_dir, cur_epoch
 
     PSEUDO_LABELS.clear()
     PSEUDO_LABELS.update(NEW_PSEUDO_LABELS)
+    analyze_pseudo_labels(PSEUDO_LABELS)
     NEW_PSEUDO_LABELS.clear()
+
 
 def save_pseudo_label_batch(input_dict,
                             pred_dicts=None,

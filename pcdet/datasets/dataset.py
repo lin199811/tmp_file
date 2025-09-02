@@ -187,7 +187,7 @@ class DatasetTemplate(torch_data.Dataset):
         gt_boxes = gt_boxes[:, :7]
 
         # only suitable for only one classes, generating gt_names for prepare data
-        gt_names = np.array([self.class_names[0] for n in gt_boxes])
+        gt_names = np.array([self.class_names[int(n) - 1]  for n in gt_classes])
 
         input_dict['gt_boxes'] = gt_boxes
         input_dict['gt_names'] = gt_names
@@ -339,15 +339,23 @@ class DatasetTemplate(torch_data.Dataset):
         )
 
         if self.training and data_dict['points'].shape[0] == 0:
-            new_index = np.random.randint(self.__len__())
-            return self.__getitem__(new_index)
-
+            # new_index = np.random.randint(self.__len__())
+            # return self.__getitem__(new_index)
+            try:
+                new_index = np.random.randint(self.__len__())
+                return self.__getitem__(new_index)
+            except Exception:
+                pass  # 出错就继续下一次循环
         if self.training and len(data_dict['gt_boxes']) == 0:
-            new_index = np.random.randint(self.__len__())
-            return self.__getitem__(new_index)
-
+            # new_index = np.random.randint(self.__len__())
+            # return self.__getitem__(new_index)
+            try:
+                new_index = np.random.randint(self.__len__())
+                return self.__getitem__(new_index)
+            except Exception:
+                pass  # 出错就继续下一次循环
         data_dict.pop('gt_names', None)
-        # data_dict.pop('gt_classes', None)
+        data_dict.pop('gt_classes', None)
 
         return data_dict
 

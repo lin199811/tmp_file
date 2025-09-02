@@ -727,9 +727,9 @@ def load_data_to_gpu(batch_dict):
             continue
         elif key in ['frame_id', 'metadata', 'calib', 'platform']:
             continue
-        elif key in ['images']:
+        elif key == 'images':
             batch_dict[key] = kornia.image_to_tensor(val).float().cuda().contiguous()
-        elif key in ['image_shape']:
+        elif key in ['voxel_coords', 'voxel_num_points', 'image_shape']:  # 需要 int32 的字段
             batch_dict[key] = torch.from_numpy(val).int().cuda()
         elif key in ['db_flag', 'data_flag']:
             continue

@@ -103,7 +103,10 @@ def eval_one_epoch(cfg, args, model, dataloader, epoch_id, logger, dist_test=Fal
             output_path=final_output_dir if args.save_to_file else None
         )
         if i==1:
-            print(pred_dicts[0])
+            # print(pred_dicts[0])
+            for pred in pred_dicts:
+                print("pred_scores: ",pred["pred_scores"])
+                print("pred_labels: ",pred["pred_labels"])
         # print(annos)
             # assert False
         det_annos += annos
