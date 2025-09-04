@@ -59,7 +59,18 @@ class PI3DET_Dataset(DatasetTemplate):
         assert os.path.exists(lidar_file), f'Lidar file {lidar_file} does not exist.'
         points = np.fromfile(str(lidar_file), dtype=np.float32).reshape(-1, 4)
         # points = self.remove_ego_points(points, center_radius=0.5)
-        points = np.hstack([points, np.zeros((points.shape[0], 1)).astype(points.dtype)])      
+        file_path_seg = file_path.replace("point_cloud", "seg").replace(".bin", "_lidarseg.bin")
+        lidar_seg_file = os.path.join(self.root_path, file_path_seg)
+        if os.path.exists(lidar_seg_file):
+            seg = np.fromfile(lidar_seg_file, dtype=np.uint8).astype(points.dtype).reshape(-1, 1)
+            # from collections import Counter
+            # count = Counter((seg + 1).ravel())
+            # print("count: ",count)
+            # seg = np.zeros((points.shape[0], 1)).astype(points.dtype)
+        else:
+            seg = np.zeros((points.shape[0], 1)).astype(points.dtype)
+
+        points = np.hstack([points, seg])      
         return points
 
     def get_image(self, file_path):
@@ -133,6 +144,8 @@ class PI3DET_Dataset(DatasetTemplate):
             if self.dataset_cfg.get('SHIFT_COOR', None):
                 points[:, 0:3] += np.array(self.dataset_cfg.SHIFT_COOR, dtype=np.float32)
             input_dict['points'] = points
+            if points.shape[1]>=5:
+                 input_dict['segment'] = points
 
         if "images" in get_item_list:
             image_path = info['image_path']

@@ -168,7 +168,7 @@ MODEL:
 
     POST_PROCESSING:
         RECALL_THRESH_LIST: [0.3, 0.5, 0.7]
-        SCORE_THRESH: 0.03 #0.3
+        SCORE_THRESH: 0.01 #0.3
         OUTPUT_RAW_SCORE: False
 
         EVAL_METRIC: kitti
@@ -183,7 +183,7 @@ MODEL:
 
 OPTIMIZATION:
     BATCH_SIZE_PER_GPU: 26
-    NUM_EPOCHS: 30
+    NUM_EPOCHS: 48
 
     OPTIMIZER: adam_onecycle
     LR: 0.01

@@ -20,6 +20,7 @@ class GBlobsVFE(VFETemplate):
     def __init__(self, model_cfg, num_point_features, **kwargs):
         super().__init__(model_cfg=model_cfg)
         self.num_point_features = num_point_features
+        self.num_point_pos = 3
         self.point_cloud_range = kwargs["point_cloud_range"]
         self.voxel_size = kwargs["voxel_size"]
 
@@ -33,7 +34,7 @@ class GBlobsVFE(VFETemplate):
     def get_output_feature_dim(self):
         return (
             0 if self.cov_only else self.num_point_features
-        ) + self.num_point_features**2  # (rel) position (N) + covariance (NxN)
+        ) + self.num_point_pos**2  # (rel) position (N) + covariance (NxN)
 
     def forward(self, batch_dict, **kwargs):
         """
@@ -46,11 +47,12 @@ class GBlobsVFE(VFETemplate):
         Returns:
             vfe_features: (num_voxels, C)
         """
-        voxel_features, voxel_num_points = (
-            batch_dict["voxels"],
-            batch_dict["voxel_num_points"],
-        )
-
+        # voxel_features, voxel_num_points = (
+        #     batch_dict["voxels"],
+        #     batch_dict["voxel_num_points"],
+        # )
+        voxel_num_points= batch_dict["voxel_num_points"]
+        voxel_features = batch_dict["voxels"][:, :, 0:3]  # 只取 xyz
         points_mean = voxel_features.sum(dim=1, keepdim=False)
         normalizer = torch.clamp_min(voxel_num_points.view(-1, 1), min=1.0).type_as(
             voxel_features
@@ -80,17 +82,24 @@ class GBlobsVFE(VFETemplate):
             ).float()
             pos_features = points_mean[:, 0:3] - voxel_centers
 
+        if batch_dict["voxels"].shape[2]>3:
+            others = batch_dict["voxels"][:, :, 3:]   # intensity, timestamp
+            others_mean = others.sum(dim=1) / normalizer
+            pos_features = torch.cat([
+                pos_features,  # 3维：相对位置
+                others_mean                   # 2维：intensity + time
+            ], dim=1)  # --> [num_voxels, 5]
+
         features = torch.cat(
             (
-                [cov.reshape(-1, self.num_point_features**2)]
+                [cov.reshape(-1, self.num_point_pos**2)]
                 if self.cov_only
-                else [pos_features, cov.reshape(-1, self.num_point_features**2)]
+                else [pos_features, cov.reshape(-1, self.num_point_pos**2)]
             ),
             dim=1,
         ).contiguous()
 
         batch_dict["voxel_features"] = features
-
         return batch_dict
 
 

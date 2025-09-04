@@ -376,7 +376,7 @@ class DatasetTemplate(torch_data.Dataset):
                         batch_size_ratio = len(val[0])
                         val = [i for item in val for i in item]
                     ret[key] = np.concatenate(val, axis=0)
-                elif key in ['points', 'voxel_coords']:
+                elif key in ['segment', 'points', 'voxel_coords']:
                     coors = []
                     if isinstance(val[0], list):
                         val =  [i for item in val for i in item]

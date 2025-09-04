@@ -269,7 +269,8 @@ def gather_and_dump_pseudo_label_result_sigle_rank(rank, ps_label_dir, cur_epoch
 
 def save_pseudo_label_batch(input_dict,
                             pred_dicts=None,
-                            need_update=True):
+                            need_update=True,
+                            min_points=5):
     """
     Save pseudo label for give batch.
     If model is given, use model to inference pred_dicts,
@@ -281,6 +282,8 @@ def save_pseudo_label_batch(input_dict,
             predict results to be generated pseudo label and saved
         need_update: Bool.
             If set to true, use consistency matching to update pseudo label
+        min_points: if pred_label in {1,2} and the box contains >= min_points gt points,
+    then force score=1.0
     """
     pos_ps_meter = common_utils.AverageMeter()
     ign_ps_meter = common_utils.AverageMeter()
@@ -297,6 +300,36 @@ def save_pseudo_label_batch(input_dict,
                 pred_cls_scores = pred_dicts[b_idx]['pred_cls_scores'].detach().cpu().numpy()
             if 'pred_iou_scores' in pred_dicts[b_idx]:
                 pred_iou_scores = pred_dicts[b_idx]['pred_iou_scores'].detach().cpu().numpy()
+
+            # ---- 新增逻辑: 用 segment 检查 box 里点的数量 ----
+            if "segment" in input_dict:
+                seg = input_dict["segment"]
+                seg_mask = seg[:, 0] == b_idx   # 当前 batch 样本的点
+                seg_points = seg[seg_mask]      # [N,6] (batch_id, x,y,z,i,class_id)
+
+                for i in range(len(pred_boxes)):
+                    cls_id = pred_labels[i]
+                    if cls_id in [1, 2]:
+                        box = pred_boxes[i]
+
+                        # 取 box 中心和尺寸
+                        cx, cy, cz, dx, dy, dz, heading = box
+                        # 简单 axis-aligned 包围盒过滤（忽略 heading）
+                        x_min, x_max = cx - dx/2, cx + dx/2
+                        y_min, y_max = cy - dy/2, cy + dy/2
+                        z_min, z_max = cz - dz/2, cz + dz/2
+
+                        pts = seg_points[:, 1:4]       # xyz
+                        cls = seg_points[:, 5]         # class_id
+                        in_box_mask = (
+                            (pts[:,0] >= x_min) & (pts[:,0] <= x_max) &
+                            (pts[:,1] >= y_min) & (pts[:,1] <= y_max) &
+                            (pts[:,2] >= z_min) & (pts[:,2] <= z_max) &
+                            (cls == cls_id)
+                        )
+                        count = in_box_mask.sum()
+                        if count >= min_points:
+                            pred_scores[i] = 1.0  # 强制分数为1.0
 
             # remove boxes under negative threshold
             if cfg.SELF_TRAIN.get('NEG_THRESH', None):

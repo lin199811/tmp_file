@@ -13,7 +13,7 @@ CKPT=/home/uqhyan14/vlm_challenge/LION/output/cfgs/DA/phase2_vehicle_quadruped/s
 # CKPT=/home/uqhyan14/vlm_challenge/LION/output/cfgs/lion_models/lion_retnet_nusc_8x_1f_1x_one_stride_64dim_gblobs/default/ckpt/checkpoint_epoch_21.pth
 
 CFG_FILE=./cfgs/lion_models/lion_retnet_nusc_8x_1f_1x_one_stride_128dim_gblobs.yaml
-CKPT=/home/uqhyan14/vlm_challenge/LION/output/cfgs/lion_models/lion_retnet_nusc_8x_1f_1x_one_stride_128dim_gblobs/default/ckpt/checkpoint_epoch_11.pth
+CKPT=/home/uqhyan14/vlm_challenge/LION/output/cfgs/lion_models/lion_retnet_nusc_8x_1f_1x_one_stride_128dim_gblobs/default/ckpt/checkpoint_epoch_13.pth
 
 
 # ----------------------
